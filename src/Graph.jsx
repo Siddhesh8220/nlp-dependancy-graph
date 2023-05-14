@@ -82,84 +82,68 @@ function Graph({
     if (!firstRowTableDataNodes) return;
 
     tokens.map((token, index) => {
+
       const edgeToTdElementIndex = token["dependencyEdge"]["headTokenIndex"];
 
       const edgeFromTdElement = firstRowTableDataNodes[index];
       const edgeToTdElement = firstRowTableDataNodes[edgeToTdElementIndex];
 
-      let edgeFromTdElementX =
-        edgeFromTdElement?.offsetLeft + edgeFromTdElement.clientWidth / 2; //calculating td midpoint for edgeFromElement
-      let edgeFromTdElementY = canvasHeight - 10;
+      //calculating td midpoint for edgeFromElement
+      let edgeFromTdElementX = edgeFromTdElement?.offsetLeft + edgeFromTdElement.clientWidth / 2; 
+      let edgeFromTdElementY = canvasHeight - 5;
 
-      let edgeToTdElementX =
-        edgeToTdElement?.offsetLeft + edgeToTdElement.clientWidth / 2; //calculating td midpoint for edgeToElement
-      let edgeToTdElementY = canvasHeight - 10;
+      //calculating td midpoint for edgeToElement
+      let edgeToTdElementX = edgeToTdElement?.offsetLeft + edgeToTdElement.clientWidth / 2; 
+      let edgeToTdElementY = canvasHeight - 5;
 
-      let quadraticCurveMidpointX = 0;
-      let quadraticCurveMidpointY = 0;
-      let bexierCurveMidpointOneX = 0;
-      let bexierCurveMidpointOneY = 0;
-      let bexierCurveMidpointTwoX = 0;
-      let bexierCurveMidpointTwoY = 0;
+      let bezierCurveMidpointOneX = 0;
+      let bezierCurveMidpointOneY = 0;
+      let bezierCurveMidpointTwoX = 0;
+      let bezierCurveMidpointTwoY = 0;
 
       // edge going to right
       if (edgeFromTdElementX < edgeToTdElementX) {
         edgeToTdElementX -= 10;
-        quadraticCurveMidpointX =
-          edgeFromTdElementX +
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 2;
-        bexierCurveMidpointOneX =
-          edgeFromTdElementX +
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 15;
-        bexierCurveMidpointTwoX =
-          edgeToTdElementX -
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 15;
+        bezierCurveMidpointOneX = edgeFromTdElementX + (Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/60);
+        bezierCurveMidpointTwoX = edgeToTdElementX - (Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/60);
       } else {
         // edge going to left
         edgeToTdElementX += 10;
-        quadraticCurveMidpointX =
-          edgeToTdElementX +
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 2;
-        bexierCurveMidpointOneX =
-          edgeFromTdElementX -
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 15;
-        bexierCurveMidpointTwoX =
-          edgeToTdElementX +
-          Math.abs(edgeFromTdElementX - edgeToTdElementX) / 15;
+        bezierCurveMidpointOneX = edgeFromTdElementX - (Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/60);
+        bezierCurveMidpointTwoX = edgeToTdElementX + (Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/60);
       }
 
-      quadraticCurveMidpointY = Math.abs(
-        canvasHeight - (1 / 4) * Math.abs(edgeFromTdElementX - edgeToTdElementX)
-      );
-      if (quadraticCurveMidpointY > canvasHeight) quadraticCurveMidpointY = 0;
-      else quadraticCurveMidpointY = quadraticCurveMidpointY - 10;
+      let calculatedCurveMidPointOneY = Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/4
+      if(calculatedCurveMidPointOneY > canvasHeight) bezierCurveMidpointOneY = 0
+      else bezierCurveMidpointOneY =  Math.abs(canvasHeight - calculatedCurveMidPointOneY)
 
-      bexierCurveMidpointOneY = Math.abs(
-        canvasHeight - (1 / 4) * Math.abs(edgeFromTdElementX - edgeToTdElementX)
-      );
-      if (bexierCurveMidpointOneY > canvasHeight) bexierCurveMidpointOneY = 0;
-      else bexierCurveMidpointOneY = bexierCurveMidpointOneY - 10;
-
-      bexierCurveMidpointTwoY = Math.abs(
-        canvasHeight - (1 / 4) * Math.abs(edgeFromTdElementX - edgeToTdElementX)
-      );
-      if (bexierCurveMidpointTwoY > canvasHeight) bexierCurveMidpointTwoY = 0;
-      else bexierCurveMidpointTwoY = bexierCurveMidpointTwoY - 10;
+      let calculatedCurveMidPointTwoY = Math.abs(edgeFromTdElementX - edgeToTdElementX) * 1/4
+      if(calculatedCurveMidPointTwoY > canvasHeight) bezierCurveMidpointTwoY = 0
+      else bezierCurveMidpointTwoY =  Math.abs(canvasHeight - calculatedCurveMidPointTwoY)
 
       // Drawing curve edges
       if (canvasNode.getContext) {
+
         const ctx = canvasNode.getContext("2d");
         ctx.beginPath();
         ctx.moveTo(edgeFromTdElementX, edgeFromTdElementY);
         ctx.bezierCurveTo(
-          bexierCurveMidpointOneX,
-          bexierCurveMidpointOneY,
-          bexierCurveMidpointTwoX,
-          bexierCurveMidpointTwoY,
+          bezierCurveMidpointOneX,
+          bezierCurveMidpointOneY,
+          bezierCurveMidpointTwoX,
+          bezierCurveMidpointTwoY,
           edgeToTdElementX,
           edgeToTdElementY
         );
         ctx.stroke();
+
+        // Drawing arrowhead
+        ctx.beginPath()
+        ctx.moveTo(edgeFromTdElementX, edgeFromTdElementY);
+        ctx.lineTo(edgeFromTdElementX - 4, edgeFromTdElementY)
+        ctx.lineTo(edgeFromTdElementX, edgeFromTdElementY + 4)
+        ctx.lineTo(edgeFromTdElementX + 4, edgeFromTdElementY)
+        ctx.fill()
       }
     });
   }, [tableRows, showLabel, showLemma, showMorphology, showPartOfSpeech]);
